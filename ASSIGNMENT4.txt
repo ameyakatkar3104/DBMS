@@ -1,0 +1,98 @@
+ASSIGNMENT4
+CREATE DATABASE assign;
+
+USE assign;
+
+-- Create the Borrower table
+CREATE TABLE borrower (
+    roll_no INT PRIMARY KEY,
+    name_of_book VARCHAR(255),
+    doi DATE, -- Date of issue
+    status CHAR(1) -- 'I' for Issued, 'R' for Returned
+);
+
+-- Insert data into Borrower table
+INSERT INTO borrower (roll_no, name_of_book, doi, status) VALUES
+(201, 'Mahabharata', '2024-09-01', 'I'),
+(202, 'Ramayana', '2024-09-02', 'I'),
+(203, 'Gitanjali', '2024-09-03', 'I'),
+(204, 'Wings of Fire', '2024-09-04', 'I'),
+(205, 'Malgudi Days', '2024-09-05', 'I'),
+(206, 'Train to Pakistan', '2024-09-06', 'I'),
+(207, 'The Guide', '2024-09-07', 'I'),
+(208, 'Godan', '2024-09-08', 'I'),
+(209, 'Discovery of India', '2024-09-09', 'I'),
+(210, 'Ignited Minds', '2024-09-10', 'I');
+
+
+-- Create the Fine table
+CREATE TABLE fine (
+    roll_no INT,
+    date DATE,
+    Amt DECIMAL(10, 2),
+    FOREIGN KEY (roll_no) REFERENCES borrower(roll_no)
+);
+
+DELIMITER //
+
+CREATE PROCEDURE handlebookreturn(
+    IN p_roll_no_ INT,
+    IN p_name_of_book VARCHAR(255)
+)
+BEGIN
+    DECLARE v_doi DATE;
+    DECLARE v_status CHAR(1);
+    DECLARE v_current_date DATE;
+    DECLARE v_no_of_days INT;
+    DECLARE v_fine_amount DECIMAL(10,2);
+    DECLARE v_fine_rate DECIMAL(10,2);
+
+    -- Initialize current date
+    SET v_current_date = CURDATE();
+
+    -- Fetch the book details 
+    SELECT doi, status
+    INTO v_doi, v_status 
+    FROM borrower
+    WHERE roll_no = p_roll_no_ AND name_of_book = p_name_of_book;
+
+    -- Calculate the number of days 
+    SET v_no_of_days = DATEDIFF(v_current_date, v_doi);
+
+    -- Handle invalid input
+    IF v_no_of_days < 0 THEN 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Invalid input or date of issue is in the future.';
+    END IF;
+
+    -- Determine the fine based on the number of days 
+    IF v_no_of_days BETWEEN 15 AND 30 THEN
+        SET v_fine_rate = 5.00;
+    ELSEIF v_no_of_days > 30 THEN
+        SET v_fine_rate = 50.00;
+    ELSE 
+        SET v_fine_rate = 0.00;
+    END IF;
+
+    SET v_fine_amount = v_no_of_days * v_fine_rate;
+
+    UPDATE borrower 
+    SET status = 'R'
+    WHERE roll_no = p_roll_no_ AND name_of_book = p_name_of_book;
+
+    IF v_fine_amount > 0 THEN 
+        INSERT INTO fine (roll_no, date, Amt)
+        VALUES (p_roll_no_, v_current_date, v_fine_amount);
+    END IF;
+
+    COMMIT;
+END //
+
+DELIMITER ;
+
+
+
+-- Call the procedure
+CALL handlebookreturn(203, 'Gitanjali');
+
+-- Check Fine table
+SELECT * FROM fine;

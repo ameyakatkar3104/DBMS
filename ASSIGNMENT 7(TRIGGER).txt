@@ -1,0 +1,70 @@
+ASSIGNMENT 7(TRIGGER)
+-- Create the database and tables
+CREATE DATABASE IF NOT EXISTS student;
+USE student;
+
+CREATE TABLE library (
+    stu_roll_no INT PRIMARY KEY,
+    stu_name VARCHAR(20),
+    book_name VARCHAR(20),
+    doi DATE,
+    price INT
+);
+
+CREATE TABLE library_audit (
+    action_performed VARCHAR(20),
+    DateAndTime DATETIME,
+    stu_roll_no INT,
+    stu_name VARCHAR(20),
+    book_name VARCHAR(20),
+    doi DATE,
+    price INT
+);
+
+-- Trigger for INSERT action
+DELIMITER //
+CREATE TRIGGER trig_library_insert
+AFTER INSERT ON library
+FOR EACH ROW 
+BEGIN 
+    INSERT INTO library_audit
+    VALUES("INSERT", NOW(), NEW.stu_roll_no, NEW.stu_name, NEW.book_name, NEW.doi, NEW.price);
+END //
+DELIMITER ;
+
+-- Trigger for UPDATE action
+DELIMITER //
+CREATE TRIGGER trig_library_update
+AFTER UPDATE ON library
+FOR EACH ROW 
+BEGIN 
+    INSERT INTO library_audit
+    VALUES("UPDATE", NOW(), OLD.stu_roll_no, OLD.stu_name, OLD.book_name, OLD.doi, OLD.price);
+END //
+DELIMITER ;
+
+-- Trigger for DELETE action
+DELIMITER //
+CREATE TRIGGER trig_library_delete
+BEFORE DELETE ON library
+FOR EACH ROW 
+BEGIN 
+    INSERT INTO library_audit
+    VALUES("DELETE", NOW(), OLD.stu_roll_no, OLD.stu_name, OLD.book_name, OLD.doi, OLD.price);
+END //
+DELIMITER ;
+
+-- Test the triggers with INSERT, UPDATE, and DELETE operations
+
+-- Insert a new record
+INSERT INTO library (stu_roll_no, stu_name, book_name, doi, price) 
+VALUES (11, 'IRFAN', 'PPS', '2024-08-01', 700);
+
+-- Update a record
+UPDATE library 
+SET stu_name = 'Irfan Khan' 
+WHERE stu_roll_no = 11;
+
+-- Delete a record
+DELETE FROM library 
+WHERE stu_roll_no = 11;

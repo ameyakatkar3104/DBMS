@@ -1,0 +1,67 @@
+ASSIGNMENT 9(MONGO CRUD & MAPRE & aggregate)
+// Create Collection
+db.createCollection("Irfan");
+
+// Insert Documents
+db.Irfan.insertMany([
+    { name: "Mother", id: 1, age: 20 },
+    { name: "Father", id: 2, age: 20 },
+    { name: "Brother", id: 3, age: 20 }
+]);
+
+// Update Document
+db.Irfan.updateOne({ name: "Brother" }, { $set: { name: "Sister" } });
+
+// Find Documents
+db.Irfan.find();
+
+// Delete Document
+db.Irfan.deleteOne({ name: "Sister" });
+
+// Insert More Documents
+db.Irfan.insertMany([
+    { name: "SG", id: 3, age: 20 },
+    { name: "OG", id: 4, age: 21 },
+    { name: "Dinesh", id: 5, age: 19 }
+]);
+
+// Find Documents Again
+db.Irfan.find();
+
+------------------------------------------------------------------------------------------------------
+
+
+// Map Function
+var mapfunc = function() {
+    emit(this.age, 1);
+};
+
+// Reduce Function
+var reducefunc2 = function(age, count) {
+    return Array.sum(count);
+};
+
+// MapReduce Operation
+db.Irfan.mapReduce(mapfunc, reducefunc2, { out: "age" });
+
+// Find Result of MapReduce
+db.age.find();
+
+
+
+-------------------------------------------------------------------------------------------------------
+
+// aggregate functions
+
+// Project Specific Fields
+db.assign.aggregate([{ $project: { name: 1, age: 1 } }]);
+
+// Sort by Age in Descending Order
+db.assign.aggregate([{ $sort: { age: -1 } }]);
+
+// Sort by Age in Ascending Order
+db.assign.aggregate([{ $sort: { age: 1 } }]);
+
+// Match Documents with Age Greater Than 19
+db.assign.aggregate([{ $match: { age: { $gt: 19 } } }]);
+

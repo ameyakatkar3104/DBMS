@@ -1,0 +1,54 @@
+ASSIGNMENT 6(CURSOR)
+CREATE DATABASE student;
+USE student;
+
+CREATE TABLE Old_customers(
+ id INT PRIMARY KEY,
+ name VARCHAR(50)
+);
+ 
+CREATE TABLE New_customers(
+ id INT PRIMARY KEY,
+ name VARCHAR(50)
+);
+
+INSERT INTO Old_customers (id, name) VALUES (1, 'Irfan'); 
+INSERT INTO Old_customers (id, name) VALUES (2, 'Saniya');
+
+DELETE FROM Old_customers WHERE id = 2;
+
+INSERT INTO New_customers (id, name) VALUES (2, 'Saniya');
+INSERT INTO New_customers (id, name) VALUES (3, 'Tanisha');
+INSERT INTO New_customers (id, name) VALUES (4, 'Mayur');
+
+DELIMITER //
+
+CREATE PROCEDURE MergeCustomers()
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE v_id INT;
+    DECLARE v_name VARCHAR(50);
+    DECLARE cur CURSOR FOR SELECT id, name FROM New_customers;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN cur;
+    customer_loop: LOOP
+        FETCH cur INTO v_id, v_name;
+        IF done THEN 
+            LEAVE customer_loop;
+        END IF;
+
+        INSERT IGNORE INTO Old_customers (id, name) VALUES (v_id, v_name);
+    END LOOP customer_loop;
+
+    CLOSE cur;
+    COMMIT;
+END //
+
+DELIMITER ;  -- Reset delimiter back to ;
+
+CALL MergeCustomers();  -- Call the procedure to merge customers
+
+SELECT * FROM Old_customers;  -- Check contents of New_customers
+
+-- DROP DATABASE student;  -- Finally drop the database

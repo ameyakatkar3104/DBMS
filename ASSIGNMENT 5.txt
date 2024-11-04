@@ -1,0 +1,77 @@
+ASSIGNMENT 5
+-- Create the database and tables
+CREATE DATABASE IF NOT EXISTS student;
+USE student;
+
+-- Table for student marks
+CREATE TABLE IF NOT EXISTS stud_marks(
+    stud_name VARCHAR(20),
+    total_marks INT 
+);
+
+-- Table for results
+CREATE TABLE IF NOT EXISTS result(
+    roll_no INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    class VARCHAR(20),
+    stud_name VARCHAR(20)
+);
+
+-- Insert sample data
+INSERT INTO stud_marks(stud_name, total_marks) VALUES
+('Alice', 650),
+('Bob', 720),
+('Charlie', 1150),
+('David', 890),
+('Eva', 780),
+('Frank', 950),
+('Grace', 1100),
+('Hannah', 675),
+('Isaac', 1020),
+('Jack', 810),
+('Karen', 690),
+('Leo', 960),
+('Mona', 1200),
+('Nathan', 885),
+('Olivia', 750);
+
+-- Function to classify students based on marks
+DELIMITER $$
+
+CREATE FUNCTION classify(marks INT) RETURNS VARCHAR(50)
+DETERMINISTIC 
+BEGIN
+    IF marks BETWEEN 990 AND 1500 THEN
+        RETURN 'Distinction';
+    ELSEIF marks BETWEEN 900 AND 989 THEN
+        RETURN 'First Class';
+    ELSEIF marks BETWEEN 825 AND 899 THEN
+        RETURN 'Higher Second Class';
+    ELSE 
+        RETURN 'Pass';
+    END IF;
+END $$
+
+-- Procedure to calculate grade and insert into result
+CREATE PROCEDURE cal_grade(IN student_name VARCHAR(20), IN roll INT)
+BEGIN
+    DECLARE clss VARCHAR(30);
+    DECLARE studmarks INT;
+
+    -- Get total_marks for the student
+    SELECT total_marks INTO studmarks 
+    FROM stud_marks 
+    WHERE stud_name = student_name;
+
+    -- Classify marks
+    SET clss = classify(studmarks);
+
+    -- Insert result
+    INSERT INTO result (roll_no, class, stud_name) VALUES (roll, clss, student_name);
+END $$
+
+DELIMITER ;
+
+-- Call the procedure for 'Jack'
+CALL cal_grade('Jack', 10);
+
+select * from result;
